@@ -1,85 +1,105 @@
 import pygame
 import sys
+import opponent
+import time
 
-# Initialize Pygame
-pygame.init()
+class Game:
+    def __init__(self):
+        pygame.init()
 
-# Set up display
-width, height = 1060, 800
-screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Kung Fu Fighter")
+        # Set up display
+        self.width, self.height = 1060, 800
+        self.screen = pygame.display.set_mode((self.width, self.height))
+        pygame.display.set_caption("Kung Fu Fighter")
 
-# Colors
-white = (255, 255, 255)
-black = (0, 0, 0)
+        # Colors
+        self.white = (255, 255, 255)
 
-# Load background
-background = pygame.image.load("MazeKungFu/assets/images/dojo_bknd.png")  # Replace with your background image
-background = pygame.transform.scale(background, (width,height))
-# Load kung fu fighter
-fighter_image = pygame.image.load("MazeKungFu/assets/images/kung_fu_fighter_standing.png")  # Replace with your fighter image
-fighter_height, fighter_width = 200, 200
-fighter_image = pygame.transform.scale(fighter_image, (fighter_height,fighter_width))
-fighter_x, fighter_y = 0, 600
-fighter_speed = 5
+        # Load background
+        self.background = pygame.image.load("MazeKungFu/assets/images/dojo_bknd.png")
+        self.background = pygame.transform.scale(self.background, (self.width, self.height))
 
-# Set initial direction
-direction = 1  # 1 for right, -1 for left
+        # Load kung fu fighter
+        self.fighter_image = pygame.image.load("MazeKungFu/assets/images/kung_fu_fighter_standing.png")
+        self.fighter_height, self.fighter_width = 200, 200
+        self.fighter_image = pygame.transform.scale(self.fighter_image, (self.fighter_height, self.fighter_width))
+        self.fighter_x, self.fighter_y = 0, 600
+        self.fighter_speed = 5
 
-# Main game loop
-clock = pygame.time.Clock()
+        # Set initial direction
+        self.direction = 1  # 1 for right, -1 for left
 
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+        # Clock for controlling the frame rate
+        self.clock = pygame.time.Clock()
 
-    # Move the fighter back and forth
-
-    keys = pygame.key.get_pressed()
-
-    # Move the fighter based on arrow key input
-    if keys[pygame.K_LEFT] and fighter_x > 0:
-        fighter_image = pygame.image.load("MazeKungFu/assets/images/kung_fu_fighter_standing.png")  # Replace with your fighter image
-        fighter_height, fighter_width = 200, 200
-        fighter_image = pygame.transform.scale(fighter_image, (fighter_height,fighter_width))
-
-        fighter_x -= fighter_speed
-    if keys[pygame.K_RIGHT] and fighter_x < width - fighter_width:
-        fighter_image = pygame.image.load("MazeKungFu/assets/images/kung_fu_fighter_standing.png")  # Replace with your fighter image
-        fighter_height, fighter_width = 200, 200
-        fighter_image = pygame.transform.scale(fighter_image, (fighter_height,fighter_width))
-
-        fighter_x += fighter_speed
-    if keys[pygame.K_UP] and fighter_x < width - fighter_width:
-        fighter_image = pygame.image.load("MazeKungFu/assets/images/kung_fu_fighter_punch.png")  # Replace with your fighter image
-        fighter_height, fighter_width = 200, 200
-        fighter_image = pygame.transform.scale(fighter_image, (fighter_height,fighter_width))
-    if keys[pygame.K_DOWN] and fighter_x < width - fighter_width:
-        fighter_image = pygame.image.load("MazeKungFu/assets/images/kung_fu_fighter_kick.png")  # Replace with your fighter image
-        fighter_height, fighter_width = 200, 200
-        fighter_image = pygame.transform.scale(fighter_image, (fighter_height,fighter_width))
+        self.opponent = opponent()
 
 
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+    def move_fighter(self, keys):
+        if keys[pygame.K_LEFT] and self.fighter_x > 0:
+            self.fighter_image = pygame.image.load("MazeKungFu/assets/images/kung_fu_fighter_standing.png")
+            self.fighter_height, self.fighter_width = 200, 200
+            self.fighter_image = pygame.transform.scale(self.fighter_image, (self.fighter_height, self.fighter_width))
+            self.fighter_x -= self.fighter_speed
+
+        if keys[pygame.K_RIGHT] and self.fighter_x < self.width - self.fighter_width:
+            self.fighter_image = pygame.image.load("MazeKungFu/assets/images/kung_fu_fighter_standing.png")
+            self.fighter_height, self.fighter_width = 200, 200
+            self.fighter_image = pygame.transform.scale(self.fighter_image, (self.fighter_height, self.fighter_width))
+            self.fighter_x += self.fighter_speed
+
+        if keys[pygame.K_UP] and self.fighter_x < self.width - self.fighter_width:
+            self.fighter_image = pygame.image.load("MazeKungFu/assets/images/kung_fu_fighter_punch.png")
+            self.fighter_height, self.fighter_width = 200, 200
+            self.fighter_image = pygame.transform.scale(self.fighter_image, (self.fighter_height, self.fighter_width))
+
+        if keys[pygame.K_DOWN] and self.fighter_x < self.width - self.fighter_width:
+            self.fighter_image = pygame.image.load("MazeKungFu/assets/images/kung_fu_fighter_kick.png")
+            self.fighter_height, self.fighter_width = 200, 200
+            self.fighter_image = pygame.transform.scale(self.fighter_image, (self.fighter_height, self.fighter_width))
+
+    def check_boundaries(self):
+        if self.fighter_x <= 0 or self.fighter_x >= self.width - self.fighter_width:
+            self.direction *= -1
+    
+    def update_opponent(self):
+        self.opponent.draw()  # Draw opponent
+        elapsed_time = time.time() - self.opponent_start_time
+
+        if elapsed_time > self.opponent.timer_duration:
+            self.opponent.fsm.process(self.opponent.TIME_UP)
+            self.opponent_start_time = time.time()
 
 
+    def update_display(self):
+        self.screen.fill(self.white)
+        self.screen.blit(self.background, (0, 0))
+        self.screen.blit(self.fighter_image, (self.fighter_x, self.fighter_y))
+        pygame.display.flip()
 
-    # Check boundaries to change direction
-    if fighter_x <= 0 or fighter_x >= width - fighter_width:
-        direction *= -1  # Change direction when hitting the screen edges
+    def run(self):
+        self.opponent_start_time = time.time()
 
-    # Clear the screen
-    screen.fill(white)
+        while True:
+            self.handle_events()
 
-    # Draw background
-    screen.blit(background, (0, 0))
+            keys = pygame.key.get_pressed()
+            self.move_fighter(keys)
 
-    # Draw kung fu fighter
-    screen.blit(fighter_image, (fighter_x, fighter_y))
+            self.check_boundaries()
 
-    # Update display
-    pygame.display.flip()
+            self.update_opponent()  # Update opponent
 
-    # Cap the frame rate
-    clock.tick(30)
+            self.update_display()
+
+            self.clock.tick(30)
+
+if __name__ == "__main__":
+    game = Game()
+    game.run()

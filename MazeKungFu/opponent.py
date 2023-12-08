@@ -4,19 +4,20 @@ import random
 import time
 import sys
 
-class OpponentFSM(pygame.sprite.Sprite):
+class opponent(pygame.sprite.Sprite):
     ATTACK, DEAD, LEFT, RIGHT, TIME_UP = "a", "d", "l","r", "t"
     def __init__(self, x = 20, y = 20):
         super().__init__()
 
-        width, height = 1060, 800
-
-        pygame.init()
-        self.screen = pygame.display.set_mode((width, height))
+        self.width, self.height = 1060, 800
+        self.screen = pygame.display.set_mode((self.width, self.height))
         self.timer_duration = 3
-        health = 100
+        self.health = 100
         self.x = x
         self.y = y
+        self.fighter_image = pygame.image.load("MazeKungFu/assets/images/kung_fu_fighter_standing.png")
+        self.fighter_height, self.fighter_width = 200, 200
+        self.fighter_image = pygame.transform.scale(self.fighter_image, (self.fighter_height, self.fighter_width))
         self.fsm = FSM(self.LEFT)  # Initialize FSM with the initial state
         self.init_fsm()
 
@@ -40,20 +41,13 @@ class OpponentFSM(pygame.sprite.Sprite):
     def perform_attack(self):
         rand = random.random()
         if rand < 0.5:
-            # Change graphics to kick
-            self.change_graphics("kick_image.png")  # Replace with the actual image file for kick
+            self.change_graphics("MazeKungFu/assets/images/kung_fu_fighter_kick.png")  
         else:
-            # Change graphics to punch
-            self.change_graphics("punch_image.png")  # Replace with the actual image file for punch
+            self.change_graphics("MazeKungFu/assets/images/kung_fu_fighter_punch.png")  
     def change_graphics(self, image_path):
-        # Load the new image
         new_image = pygame.image.load(image_path)
-
-        # Resize the image to match the fighter's dimensions (adjust as needed)
-        new_image = pygame.transform.scale(new_image, (200, 200))
-
-        # Set the new image to the fighter's image attribute
-        fighter_image = new_image
+        new_image = pygame.transform.scale(new_image, (self.fighter_height, self.fighter_width))
+        self.fighter_image = new_image
 
     def move_left(self):
         self.x -= 5  # Adjust the speed as needed
@@ -62,40 +56,47 @@ class OpponentFSM(pygame.sprite.Sprite):
         self.x += 5  # Adjust the speed as needed
     
     def perform_dead(self):
+        print("dead")
         pygame.quit()
         sys.exit()
 
     def draw(self):
+        background = pygame.image.load("MazeKungFu/assets/images/dojo_bknd.png")
+        background = pygame.transform.scale(background, (self.width, self.height))
+
+        # Draw background
+        self.screen.blit(background, (0, 0))
+
+        # Draw fighter
+        self.screen.blit(self.fighter_image, (self.x, self.y))
+        
+        """
         width, height = 1060, 800
-        background = pygame.image.load("MazeKungFu/assets/images/dojo_bknd.png")  # Replace with your background image
+        background = pygame.image.load("MazeKungFu/assets/images/dojo_bknd.png")  
         background = pygame.transform.scale(background, (width,height))
-        fighter_image = pygame.image.load("MazeKungFu/assets/images/kung_fu_fighter_standing.png")  # Replace with your fighter image
+        fighter_image = pygame.image.load("MazeKungFu/assets/images/kung_fu_fighter_standing.png") 
         fighter_height, fighter_width = 200, 200
         fighter_image = pygame.transform.scale(fighter_image, (fighter_height,fighter_width))
-
+        """
 
     def run(self):
         start_time = time.time()
-        background = pygame.image.load("MazeKungFu/assets/images/dojo_bknd.png")  # Replace with your background image
-     
-        """
+
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
 
+            self.draw()
+
             elapsed_time = time.time() - start_time
             print(elapsed_time)
             if elapsed_time > self.timer_duration:
                 self.fsm.process(self.TIME_UP)
                 start_time = time.time()
-                pygame.display.flip()
 
-            time.sleep(0.5)
-        """ 
+            pygame.display.flip()
+
         
 
-if __name__ == "__main__":
-    tl = OpponentFSM()
-    tl.run()
