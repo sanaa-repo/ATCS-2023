@@ -15,7 +15,7 @@ class opponent(pygame.sprite.Sprite):
         self.health = 100
         self.x = x
         self.y = y
-        self.fighter_image = pygame.image.load("MazeKungFu/assets/images/kung_fu_fighter_standing.png")
+        self.fighter_image = pygame.image.load("assets/images/kung_fu_fighter_standing.png")
         self.fighter_height, self.fighter_width = 200, 200
         self.fighter_image = pygame.transform.scale(self.fighter_image, (self.fighter_height, self.fighter_width))
         self.fsm = FSM(self.LEFT)  # Initialize FSM with the initial state
@@ -41,9 +41,9 @@ class opponent(pygame.sprite.Sprite):
     def perform_attack(self):
         rand = random.random()
         if rand < 0.5:
-            self.change_graphics("MazeKungFu/assets/images/kung_fu_fighter_kick.png")  
+            self.change_graphics("assets/images/kung_fu_fighter_kick.png")  
         else:
-            self.change_graphics("MazeKungFu/assets/images/kung_fu_fighter_punch.png")  
+            self.change_graphics("assets/images/kung_fu_fighter_punch.png")  
     def change_graphics(self, image_path):
         new_image = pygame.image.load(image_path)
         new_image = pygame.transform.scale(new_image, (self.fighter_height, self.fighter_width))
@@ -54,14 +54,17 @@ class opponent(pygame.sprite.Sprite):
 
     def move_right(self):
         self.x += 5  # Adjust the speed as needed
-    
+    def check_health(self):
+        if self.health <= 0:
+            self.perform_dead()
+
     def perform_dead(self):
         print("dead")
         pygame.quit()
         sys.exit()
 
     def draw(self):
-        background = pygame.image.load("MazeKungFu/assets/images/dojo_bknd.png")
+        background = pygame.image.load("assets/images/dojo_bknd.png")
         background = pygame.transform.scale(background, (self.width, self.height))
 
         # Draw background
