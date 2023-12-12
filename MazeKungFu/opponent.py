@@ -4,102 +4,105 @@ import random
 import time
 import sys
 
-class opponent(pygame.sprite.Sprite):
-    ATTACK, DEAD, LEFT, RIGHT, TIME_UP = "a", "d", "l","r", "t"
-    def __init__(self, x = 20, y = 20):
+class Opponent(pygame.sprite.Sprite):
+    ATTACK, DEAD, LEFT, RIGHT, TIME_UP, HEALTH_ZERO = "a", "d", "l","r", "t", "h"
+    def __init__(self, game, x=20, y=20):
         super().__init__()
-
+        self.game = game
         self.width, self.height = 1060, 800
-        self.screen = pygame.display.set_mode((self.width, self.height))
         self.timer_duration = 3
         self.health = 100
-        self.x = x
-        self.y = y
-        self.fighter_image = pygame.image.load("assets/images/kung_fu_fighter_standing.png")
+        self.x = self.width - 200
+        self.y = self.height - 200
+        self.load_images()
+        self.fsm = FSM(self.LEFT)
+        self.init_fsm()
+
+    def load_images(self):
+        self.background = pygame.image.load("assets/images/dojo_bknd.png")
+        self.background = pygame.transform.scale(self.background, (self.width, self.height))
+
+        self.fighter_image = pygame.image.load("assets/images/opp_standing.png")
         self.fighter_height, self.fighter_width = 200, 200
         self.fighter_image = pygame.transform.scale(self.fighter_image, (self.fighter_height, self.fighter_width))
-        self.fsm = FSM(self.LEFT)  # Initialize FSM with the initial state
-        self.init_fsm()
 
 
     def init_fsm(self):
+        
         self.fsm.add_transition(self.TIME_UP, self.LEFT, self.move_right, self.RIGHT)
-        self.fsm.add_transition(self.TIME_UP, self.LEFT, self.perform_attack, self.ATTACK)
-        self.fsm.add_transition(self.TIME_UP, self.LEFT, self.perform_dead, self.DEAD)
+        #self.fsm.add_transition(self.TIME_UP, self.LEFT, self.perform_attack, self.ATTACK)
 
-        self.fsm.add_transition(self.TIME_UP, self.RIGHT, self.move_right, self.LEFT)
-        self.fsm.add_transition(self.TIME_UP, self.RIGHT, self.perform_attack, self.ATTACK)
-        self.fsm.add_transition(self.TIME_UP, self.RIGHT, self.perform_dead, self.DEAD)
+        self.fsm.add_transition(self.TIME_UP, self.RIGHT, self.move_left, self.LEFT)
+        #self.fsm.add_transition(self.TIME_UP, self.RIGHT, self.perform_attack, self.ATTACK)
 
-        self.fsm.add_transition(self.TIME_UP, self.ATTACK, self.move_right, self.LEFT)
-        self.fsm.add_transition(self.TIME_UP, self.ATTACK, self.perform_attack, self.RIGHT)
-        self.fsm.add_transition(self.TIME_UP, self.ATTACK, self.perform_dead, self.DEAD)
+        self.fsm.add_transition(self.TIME_UP, self.ATTACK, self.move_right, self.RIGHT)
+        #self.fsm.add_transition(self.TIME_UP, self.ATTACK, self.perform_attack, self.RIGHT)
 
+        # New transition: When health reaches zero, go to DEAD state
+        self.fsm.add_transition(self.HEALTH_ZERO, self.LEFT, self.perform_dead, self.DEAD)
+        self.fsm.add_transition(self.HEALTH_ZERO, self.RIGHT, self.perform_dead, self.DEAD)
+        self.fsm.add_transition(self.HEALTH_ZERO, self.ATTACK, self.perform_dead, self.DEAD)
+
+    def update_fsm(self, input_symbol):
+        # Update FSM based on input event (e.g., TIME_UP or HEALTH_ZERO)
+        #print(input_symbol, self.get_state())
+        self.fsm.process(input_symbol)
+        self.check_health()
     def get_state(self):
+        # TODO: Return the maze bot's current state
         return self.fsm.current_state
 
     def perform_attack(self):
         rand = random.random()
         if rand < 0.5:
-            self.change_graphics("assets/images/kung_fu_fighter_kick.png")  
+            self.change_graphics("assets/images/opp_standing.png")  
         else:
-            self.change_graphics("assets/images/kung_fu_fighter_punch.png")  
+            self.change_graphics("assets/images/opp_standing.png")  
     def change_graphics(self, image_path):
         new_image = pygame.image.load(image_path)
         new_image = pygame.transform.scale(new_image, (self.fighter_height, self.fighter_width))
         self.fighter_image = new_image
+    def check_collision(self, player_x, player_y, player_width, player_height):
+    # Check for collision with the player
+        if (
+            self.x < player_x + player_width and
+            self.x + self.fighter_width > player_x and
+            self.y < player_y + player_height and
+            self.y + self.fighter_height > player_y
+        ):
+            return True
+        return False
+
+    def handle_collision(self, player_instance):
+        if self.check_collision(player_instance.fighter_x, player_instance.fighter_y, player_instance.fighter_width, player_instance.fighter_height):
+            self.health -= 20  
+            self.check_health()
+            self.update_fsm(self.HEALTH_ZERO)  
+            print("Player touched opponent! Opponent's health:", self.health)
 
     def move_left(self):
-        self.x -= 5  # Adjust the speed as needed
+        #randomize pixel movement amount and if you are sending attack or left/right into fsm
+        if(self.x > self.width/2):
+            distance = random.randint(30, 50)
+        else:
+            distance = random.randint(10, 30)
+        self.x -= distance
 
     def move_right(self):
-        self.x += 5  # Adjust the speed as needed
+        if(self.x < self.width/2):
+            distance = random.randint(30, 50)
+        else:
+            distance = random.randint(10, 30)
+        self.x += distance  
+    
     def check_health(self):
         if self.health <= 0:
-            self.perform_dead()
+            self.update_fsm(self.HEALTH_ZERO)
 
     def perform_dead(self):
         print("dead")
         pygame.quit()
-        sys.exit()
+        sys.exit()        
 
-    def draw(self):
-        background = pygame.image.load("assets/images/dojo_bknd.png")
-        background = pygame.transform.scale(background, (self.width, self.height))
-
-        # Draw background
-        self.screen.blit(background, (0, 0))
-
-        # Draw fighter
-        self.screen.blit(self.fighter_image, (self.x, self.y))
-        
-        """
-        width, height = 1060, 800
-        background = pygame.image.load("MazeKungFu/assets/images/dojo_bknd.png")  
-        background = pygame.transform.scale(background, (width,height))
-        fighter_image = pygame.image.load("MazeKungFu/assets/images/kung_fu_fighter_standing.png") 
-        fighter_height, fighter_width = 200, 200
-        fighter_image = pygame.transform.scale(fighter_image, (fighter_height,fighter_width))
-        """
-
-    def run(self):
-        start_time = time.time()
-
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-
-            self.draw()
-
-            elapsed_time = time.time() - start_time
-            print(elapsed_time)
-            if elapsed_time > self.timer_duration:
-                self.fsm.process(self.TIME_UP)
-                start_time = time.time()
-
-            pygame.display.flip()
-
-        
-
+    def draw(self, screen):
+        screen.blit(self.fighter_image, (self.x, self.y))    
