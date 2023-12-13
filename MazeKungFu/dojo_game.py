@@ -128,6 +128,6 @@ class dojo_game:
                 self.update_display()
             pygame.display.flip()
 
-if __name__ == "__main__":
-    game = dojo_game()
-    game.run()
+#if __name__ == "__main__":
+    #game = dojo_game()
+    #game.run()

@@ -28,15 +28,10 @@ class Opponent(pygame.sprite.Sprite):
 
 
     def init_fsm(self):
-        
+        # randomize imput(self.lef/self.righ/self.attack)
         self.fsm.add_transition(self.TIME_UP, self.LEFT, self.move_right, self.RIGHT)
-        #self.fsm.add_transition(self.TIME_UP, self.LEFT, self.perform_attack, self.ATTACK)
-
         self.fsm.add_transition(self.TIME_UP, self.RIGHT, self.move_left, self.LEFT)
-        #self.fsm.add_transition(self.TIME_UP, self.RIGHT, self.perform_attack, self.ATTACK)
-
         self.fsm.add_transition(self.TIME_UP, self.ATTACK, self.move_right, self.RIGHT)
-        #self.fsm.add_transition(self.TIME_UP, self.ATTACK, self.perform_attack, self.RIGHT)
 
         # New transition: When health reaches zero, go to DEAD state
         self.fsm.add_transition(self.HEALTH_ZERO, self.LEFT, self.perform_dead, self.DEAD)
@@ -81,7 +76,7 @@ class Opponent(pygame.sprite.Sprite):
             print("Player touched opponent! Opponent's health:", self.health)
 
     def move_left(self):
-        #randomize pixel movement amount and if you are sending attack or left/right into fsm
+        #randomize if you are sending attack or left/right into fsm
         if(self.x > self.width/2):
             distance = random.randint(30, 50)
         else:
