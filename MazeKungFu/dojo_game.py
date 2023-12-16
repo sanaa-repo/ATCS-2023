@@ -45,6 +45,7 @@ class DojoGame:
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                print("quitting")
                 pygame.quit()
                 sys.exit()
 
@@ -81,6 +82,7 @@ class DojoGame:
         if elapsed_time > self.kf_opponent.timer_duration:
             self.kf_opponent.update_fsm(self.kf_opponent.TIME_UP)
 
+
             opponent_state = self.kf_opponent.get_state()
 
             if opponent_state == self.kf_opponent.LEFT:
@@ -90,9 +92,6 @@ class DojoGame:
             elif opponent_state == self.kf_opponent.ATTACK:
                 self.kf_opponent.perform_attack()
 
-            # Check for collision with the player
-            if self.kf_opponent.is_contacting_player(self.fighter_x, self.fighter_y, self.fighter_width, self.fighter_height):
-                self.kf_opponent.handle_collision(self)
 
             self.opponent_start_time = time.time()
 
@@ -112,7 +111,12 @@ class DojoGame:
             self.kf_opponent.update_fsm(self.kf_opponent.TIME_UP)
 
             opponent_state = self.kf_opponent.get_state()
+            print(f"Opponent state after TIME_UP transition: {opponent_state}")
 
+            # Print opponent's state again to see if it changed during actions
+            print(f"Opponent state after actions: {self.kf_opponent.get_state()}")
+
+            # Move the opponent based on the final state
             if opponent_state == self.kf_opponent.LEFT:
                 self.kf_opponent.move_left()
             elif opponent_state == self.kf_opponent.RIGHT:
@@ -120,15 +124,12 @@ class DojoGame:
             elif opponent_state == self.kf_opponent.ATTACK:
                 self.kf_opponent.perform_attack()
 
-            # Check for collision with the player
-            if self.kf_opponent.is_contacting_player(self.fighter_x, self.fighter_y, self.fighter_width, self.fighter_height):
-                self.kf_opponent.handle_collision(self)
-
             self.opponent_start_time = time.time()
+
+
 
     def update_opponent_movement(self):
         opponent_state = self.kf_opponent.get_state()
-
         if opponent_state == self.kf_opponent.LEFT:
             self.kf_opponent.move_left()
         elif opponent_state == self.kf_opponent.RIGHT:
@@ -136,32 +137,69 @@ class DojoGame:
         elif opponent_state == self.kf_opponent.ATTACK:
             self.kf_opponent.perform_attack()
 
+
     def run(self):
+        print("Hello, and welcome to your black belt test. Today, we will test both your physical and mental abilities through 2 test. You will need to survive both to win. Good luck fighter!")
         running = True
-        while self.elapsed_time < self.run_time and running:
-            self.dt += self.clock.tick(60)
+        try:
+            print("Entering game loop...")
 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                    pygame.quit()
-                    sys.exit()
+            while running:
+                print("In while")
+                self.dt += self.clock.tick(60)
 
-            self.handle_events()
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
 
-            keys = pygame.key.get_pressed()
-            self.move_fighter(keys)
+                self.handle_events()
 
-            self.check_boundaries()
+                keys = pygame.key.get_pressed()
+                self.move_fighter(keys)
 
-            self.update_opponent_state()
-            self.update_opponent_movement()
+                self.check_boundaries()
 
-            self.update_display()
+                # Call this to update opponent's state
+                elapsed_time = time.time() - self.opponent_start_time
+                if elapsed_time > self.kf_opponent.timer_duration:
+                    self.kf_opponent.update_fsm(self.kf_opponent.TIME_UP)
 
-            pygame.display.flip()
+                    opponent_state = self.kf_opponent.get_state()
+                    print(f"Opponent state after TIME_UP transition: {opponent_state}")
 
-            self.elapsed_time += 1
+                    if opponent_state == self.kf_opponent.LEFT:
+                        self.kf_opponent.move_left()
+                    elif opponent_state == self.kf_opponent.RIGHT:
+                        self.kf_opponent.move_right()
+                    elif opponent_state == self.kf_opponent.ATTACK:
+                        self.kf_opponent.perform_attack()
+
+                    self.opponent_start_time = time.time()
+
+                    # Print opponent's state again to see if it changed during actions
+                    print(f"Opponent state after actions: {self.kf_opponent.get_state()}")
+
+                # Call this to update opponent's movement
+                opponent_state = self.kf_opponent.get_state()
+                if opponent_state == self.kf_opponent.LEFT:
+                    self.kf_opponent.move_left()
+                elif opponent_state == self.kf_opponent.RIGHT:
+                    self.kf_opponent.move_right()
+                elif opponent_state == self.kf_opponent.ATTACK:
+                    self.kf_opponent.perform_attack()
+
+                self.update_display()
+
+                pygame.display.flip()
+
+                self.elapsed_time += 1
+                print(running)
+            print("Exiting game loop...")
+
+        except Exception as e:
+            print(f"An exception occurred: {e}")
+            pygame.quit()
+            sys.exit()
 
 
 if __name__ == "__main__":

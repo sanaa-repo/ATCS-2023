@@ -5,13 +5,12 @@ import time
 import sys
 
 class Opponent(pygame.sprite.Sprite):
-    ATTACK, DEAD, LEFT, RIGHT, TIME_UP, HEALTH_ZERO = "a", "d", "l","r", "t", "h"
+    ATTACK, DEAD, LEFT, RIGHT, TIME_UP = "a", "d", "l","r", "t"
     def __init__(self, game, x=20, y=20):
         super().__init__()
         self.game = game
         self.width, self.height = 1060, 800
-        self.timer_duration = 3
-        self.health = 100
+        self.timer_duration = 1
         self.x = self.width - 200
         self.y = self.height - 200
         self.load_images()
@@ -28,21 +27,16 @@ class Opponent(pygame.sprite.Sprite):
 
 
     def init_fsm(self):
-        # randomize imput(self.lef/self.righ/self.attack)
+        # randomize input (self.left/self.right/self.attack)
         self.fsm.add_transition(self.TIME_UP, self.LEFT, self.choose_move, self.RIGHT)
         self.fsm.add_transition(self.TIME_UP, self.RIGHT, self.choose_move, self.LEFT)
         self.fsm.add_transition(self.TIME_UP, self.ATTACK, self.choose_move, self.RIGHT)
-
-        # New transition: When health reaches zero, go to DEAD state
-        self.fsm.add_transition(self.HEALTH_ZERO, self.LEFT, self.perform_dead, self.DEAD)
-        self.fsm.add_transition(self.HEALTH_ZERO, self.RIGHT, self.perform_dead, self.DEAD)
-        self.fsm.add_transition(self.HEALTH_ZERO, self.ATTACK, self.perform_dead, self.DEAD)
-
+        
     def update_fsm(self, input_symbol):
         # Update FSM based on input event (e.g., TIME_UP or HEALTH_ZERO)
         #print(input_symbol, self.get_state())
         self.fsm.process(input_symbol)
-        self.check_health()
+        
     def get_state(self):
         # TODO: Return the maze bot's current state
         return self.fsm.current_state
@@ -54,6 +48,7 @@ class Opponent(pygame.sprite.Sprite):
             self.move_right()
         else:
             self.perform_attack()
+    
     def perform_attack(self):
         self.x -= 0
         rand = random.random()
@@ -78,11 +73,8 @@ class Opponent(pygame.sprite.Sprite):
 
     def handle_collision(self, player_instance):
         if self.check_collision(player_instance.fighter_x, player_instance.fighter_y, player_instance.fighter_width, player_instance.fighter_height):
-            self.health -= 10  
             self.check_health()
-            self.update_fsm(self.HEALTH_ZERO)  
-            print("Player touched opponent! Opponent's health:", self.health)
-
+            
     def move_left(self):
         #randomize if you are sending attack or left/right into fsm
         distance = random.randint(5, 15)
@@ -111,15 +103,23 @@ class Opponent(pygame.sprite.Sprite):
         else:
             distance = random.randint(10, 30)
         self.x += distance  """
-    
+    def choose_left(self):
+        self.move_left()
+
+    def choose_right(self):
+        self.move_right()
+
+    def choose_attack(self):
+        self.perform_attack()
+
     def check_health(self):
         if self.health <= 0:
             self.update_fsm(self.HEALTH_ZERO)
 
     def perform_dead(self):
         print("dead")
-        pygame.quit()
-        sys.exit()      
+        #pygame.quit()
+        #sys.exit()      
     def is_contacting_player(self, player_x, player_y, player_width, player_height):
         # Check for collision with the player
         if (
