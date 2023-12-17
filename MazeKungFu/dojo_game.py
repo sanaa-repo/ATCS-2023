@@ -2,6 +2,7 @@ import pygame
 import sys
 from opponent import Opponent
 import time
+from maze import MazeGame
 
 class DojoGame:
     def __init__(self):
@@ -19,7 +20,7 @@ class DojoGame:
         self.fighter_image = pygame.image.load("assets/images/kung_fu_fighter_standing.png")
         self.fighter_height, self.fighter_width = 200, 200
         self.fighter_image = pygame.transform.scale(self.fighter_image, (self.fighter_height, self.fighter_width))
-        
+
         self.fighter_x, self.fighter_y = 0, 600
         self.fighter_speed = 5
 
@@ -34,6 +35,9 @@ class DojoGame:
         self.elapsed_time = 0
 
         self.health = 100
+        self.show_dojo = True  # Add this line to initialize the attribute
+        pygame.mixer.music.load("path_to_your_theme_music_file.mp3")
+
     def deduct_health(self, damage):
         self.health -= damage
         if self.health <= 0:
@@ -139,11 +143,14 @@ class DojoGame:
 
 
     def run(self):
-        print("Hello, and welcome to your black belt test. Today, we will test both your physical and mental abilities through 2 test. You will need to survive both to win. Good luck fighter!")
+        print("Hello, and welcome to your black belt test. Today, we will test both your physical and mental abilities through 2 tests. You will need to survive both to win. Good luck fighter!")
         running = True
+        start_time = time.time()
+        pygame.mixer.music.play(-1)
 
         print("Entering game loop...")
-        while running:
+        while running and (time.time() - start_time) < 30:  # Change the total run time as needed
+            print(time.time() - start_time)
             self.dt += self.clock.tick(60)
 
             for event in pygame.event.get():
@@ -188,8 +195,8 @@ class DojoGame:
                 self.kf_opponent.perform_attack()
 
             # Check for collision with the player
-            #if self.kf_opponent.is_contacting_player(self.fighter_x, self.fighter_y, self.fighter_width, self.fighter_height):
-                #self.kf_opponent.handle_collision(self)
+            # if self.kf_opponent.is_contacting_player(self.fighter_x, self.fighter_y, self.fighter_width, self.fighter_height):
+            # self.kf_opponent.handle_collision(self)
 
             # Update display
             self.update_display()
@@ -203,7 +210,16 @@ class DojoGame:
                 print("You were killed. Game Over")
                 running = False
 
-        print("Exiting game loop...")
+            # Check if the player spent 60 seconds in the dojo
+            if (time.time() - start_time) > 30 and not self.show_dojo:
+                print("Entering Dojo")
+                self.show_dojo = False
+        
+        while (time.time() - start_time) < 60:
+            self.maze_game = MazeGame(21, 21, 30)
+            self.maze_game.run()
+
+        pygame.mixer.music.stop()
         pygame.quit()
         sys.exit()
 

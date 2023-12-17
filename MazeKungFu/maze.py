@@ -1,7 +1,6 @@
 import pygame
 import random
 import sys
-from dojo_game import DojoGame
 
 class MazeGame:
     def __init__(self, width, height, cell_size):
@@ -16,12 +15,9 @@ class MazeGame:
         self.BLACK = (0, 0, 0)
         self.RED = (255, 0, 0)
         self.GREEN = (0, 255, 0)
-        self.BLUE = (0, 0, 255)
 
         self.maze = self.generate_maze(width, height)
         self.player_pos = (1, 0)
-        self.dojo_game = DojoGame()
-        self.on_blue_block = False
         self.show_dojo = False
         self.dojo_timer = 0
 
@@ -50,14 +46,6 @@ class MazeGame:
         # Place exit at the bottom-right corner
         maze[height - 1][-2] = 0
 
-        # Choose four random white blocks and replace them with blue blocks
-        white_blocks = [(x, y) for y, row in enumerate(maze) for x, cell in enumerate(row) if cell == 0]
-        if len(white_blocks) >= 4:
-            for _ in range(4):  # Change the number of blue blocks here
-                bx, by = random.choice(white_blocks)
-                maze[by][bx] = 2  # Blue block
-                white_blocks.remove((bx, by))
-
         return maze
 
     def draw_maze(self):
@@ -83,7 +71,6 @@ class MazeGame:
             self.dojo_game.run()
 
     def run(self):
-        in_dojo = False
         reached_exit = False
 
         while not reached_exit:
@@ -95,56 +82,33 @@ class MazeGame:
                 if event.type == pygame.KEYDOWN:
                     keys = pygame.key.get_pressed()
 
-                    if keys[pygame.K_UP] and not in_dojo:
+                    if keys[pygame.K_UP]:
                         if self.maze[self.player_pos[1] - 1][self.player_pos[0]] in {0, 2}:
                             self.player_pos = (self.player_pos[0], self.player_pos[1] - 1)
-                            self.on_blue_block = False
-                            in_dojo = True
 
-                    elif keys[pygame.K_DOWN] and not in_dojo:
+                    elif keys[pygame.K_DOWN]:
                         if self.maze[self.player_pos[1] + 1][self.player_pos[0]] in {0, 2}:
                             self.player_pos = (self.player_pos[0], self.player_pos[1] + 1)
-                            self.on_blue_block = False
-                            in_dojo = True
 
-                    elif keys[pygame.K_LEFT] and not in_dojo:
+                    elif keys[pygame.K_LEFT]:
                         if self.maze[self.player_pos[1]][self.player_pos[0] - 1] in {0, 2}:
                             self.player_pos = (self.player_pos[0] - 1, self.player_pos[1])
-                            self.on_blue_block = False
-                            in_dojo = True
 
-                    elif keys[pygame.K_RIGHT] and not in_dojo:
+                    elif keys[pygame.K_RIGHT]:
                         if self.maze[self.player_pos[1]][self.player_pos[0] + 1] in {0, 2}:
                             self.player_pos = (self.player_pos[0] + 1, self.player_pos[1])
-                            self.on_blue_block = False
-                            in_dojo = True
 
             self.screen.fill(self.BLACK)
 
-            if not in_dojo:
-                self.draw_maze()
-                self.draw_player()
-                self.draw_exit()
-
-                if self.on_blue_block and not self.show_dojo:
-                    print("Entering Dojo")
-                    in_dojo = True
-                    self.show_dojo = True
-            else:
-                print("In Dojo")
-                self.draw_dojo()
-                in_dojo = False
+            self.draw_maze()
+            self.draw_player()
+            self.draw_exit()
 
             pygame.display.flip()
 
             if self.player_pos == (self.width - 2, self.height - 1):
-                print("Congratulations! You reached the exit.")
+                print("Congratulations Black Belt! You completed both the maze and sparring challenge.")
                 reached_exit = True
 
         pygame.quit()
         sys.exit()
-
-if __name__ == "__main__":
-    pygame.init()
-    game = MazeGame(21, 21, 30)
-    game.run()

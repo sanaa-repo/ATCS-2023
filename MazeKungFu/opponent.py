@@ -49,6 +49,8 @@ class Opponent(pygame.sprite.Sprite):
         else:
             self.fsm.set_state(self.ATTACK)
         pygame.time.delay(500)
+        self.change_graphics("assets/images/opp_standing.png")
+        
 
 
     def perform_attack(self):
