@@ -57,6 +57,19 @@ class FSM:
         """
         # TODO: Implement get transition
         return self.state_transitions[(input_symbol, state)]
+    def set_state(self, new_state):
+        """
+        Set the current state to a new state.
+        
+        Args:
+            new_state (anything): The new state to set.
+        """
+        self.current_state = new_state
+
+
+
+
+
 
     def process(self, input_symbol):
         """

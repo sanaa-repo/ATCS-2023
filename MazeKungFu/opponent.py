@@ -28,9 +28,9 @@ class Opponent(pygame.sprite.Sprite):
 
     def init_fsm(self):
         # randomize input (self.left/self.right/self.attack)
-        self.fsm.add_transition(self.TIME_UP, self.LEFT, self.choose_move, self.RIGHT)
-        self.fsm.add_transition(self.TIME_UP, self.RIGHT, self.choose_move, self.LEFT)
-        self.fsm.add_transition(self.TIME_UP, self.ATTACK, self.choose_move, self.RIGHT)
+        self.fsm.add_transition(self.TIME_UP, self.LEFT, self.choose_move, None)
+        self.fsm.add_transition(self.TIME_UP, self.RIGHT, self.choose_move, None)
+        self.fsm.add_transition(self.TIME_UP, self.ATTACK, self.choose_move, None)
         
     def update_fsm(self, input_symbol):
         # Update FSM based on input event (e.g., TIME_UP or HEALTH_ZERO)
@@ -42,13 +42,15 @@ class Opponent(pygame.sprite.Sprite):
         return self.fsm.current_state
     def choose_move(self):
         rand = random.random()
-        if rand <.3:
-            self.move_left()
-        elif rand< .6:
-            self.move_right()
+        if rand < 0.3:
+            self.fsm.set_state(self.LEFT)
+        elif rand < 0.6:
+            self.fsm.set_state(self.RIGHT)
         else:
-            self.perform_attack()
-    
+            self.fsm.set_state(self.ATTACK)
+        pygame.time.delay(500)
+
+
     def perform_attack(self):
         self.x -= 0
         rand = random.random()
@@ -70,51 +72,20 @@ class Opponent(pygame.sprite.Sprite):
         ):
             return True
         return False
-
-    def handle_collision(self, player_instance):
-        if self.check_collision(player_instance.fighter_x, player_instance.fighter_y, player_instance.fighter_width, player_instance.fighter_height):
-            self.check_health()
             
     def move_left(self):
-        #randomize if you are sending attack or left/right into fsm
+        #self.change_graphics("assets/images/opp_standing.png")
         distance = random.randint(5, 15)
         self.x -= distance
-
-        # Ensure the opponent stays within the left screen boundary
         if self.x < 0:
             self.x = 0
 
-        """if(self.x > self.width/2):
-            distance = random.randint(30, 50)
-        else:
-            distance = random.randint(10, 30)
-        self.x -= distance"""
-
     def move_right(self):
+        #self.change_graphics("assets/images/opp_standing.png")
         distance = random.randint(5, 15)
         self.x += distance
-
-        # Ensure the opponent stays within the right screen boundary
         if self.x > self.width - self.fighter_width:
             self.x = self.width - self.fighter_width
-
-        """if(self.x < self.width/2):
-            distance = random.randint(30, 50)
-        else:
-            distance = random.randint(10, 30)
-        self.x += distance  """
-    def choose_left(self):
-        self.move_left()
-
-    def choose_right(self):
-        self.move_right()
-
-    def choose_attack(self):
-        self.perform_attack()
-
-    def check_health(self):
-        if self.health <= 0:
-            self.update_fsm(self.HEALTH_ZERO)
 
     def perform_dead(self):
         print("dead")
