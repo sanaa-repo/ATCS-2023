@@ -1,3 +1,11 @@
+"""
+Maze class controls the maze portion of the game, which is DFS generated.
+
+Author: @ Sanaa Kapur
+
+Used GPT 3
+"""
+
 import pygame
 import random
 import sys
@@ -21,7 +29,7 @@ class MazeGame:
         self.show_dojo = False
         self.dojo_timer = 0
 
-
+    #generates a new maze using DFS every time
     def generate_maze(self, width, height):
         maze = [[1 for _ in range(width)] for _ in range(height)]
 
@@ -47,29 +55,24 @@ class MazeGame:
         maze[height - 1][-2] = 0
 
         return maze
-
+    #maze graphics
     def draw_maze(self):
         for y, row in enumerate(self.maze):
             for x, cell in enumerate(row):
                 if cell == 0:
                     color = self.WHITE
-                elif cell == 2:
-                    color = self.BLUE
                 else:
                     color = self.BLACK
                 pygame.draw.rect(self.screen, color, (x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size))
-
+    #draws player
     def draw_player(self):
         x, y = self.player_pos
         pygame.draw.circle(self.screen, self.RED, (x * self.cell_size + self.cell_size // 2, y * self.cell_size + self.cell_size // 2), self.cell_size // 2)
-
+    #draws exit
     def draw_exit(self):
         pygame.draw.circle(self.screen, self.GREEN, ((self.width - 2) * self.cell_size + self.cell_size // 2, (self.height - 1) * self.cell_size + self.cell_size // 2), self.cell_size // 2)
 
-    def draw_dojo(self):
-        if self.show_dojo:
-            self.dojo_game.run()
-
+    #runs the maze section of the game
     def run(self):
         reached_exit = False
 

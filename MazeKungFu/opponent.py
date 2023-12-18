@@ -1,8 +1,14 @@
+"""
+Opponent class controls the opponent movements and fsm.
+
+Author: @ Sanaa Kapur
+
+Used GPT 3
+"""
+
 import pygame
 from fsm import FSM
 import random 
-import time
-import sys
 
 class Opponent(pygame.sprite.Sprite):
     ATTACK, DEAD, LEFT, RIGHT, TIME_UP = "a", "d", "l","r", "t"
@@ -25,21 +31,22 @@ class Opponent(pygame.sprite.Sprite):
         self.fighter_height, self.fighter_width = 200, 200
         self.fighter_image = pygame.transform.scale(self.fighter_image, (self.fighter_height, self.fighter_width))
 
-
+    #creates FSM states
     def init_fsm(self):
-        # randomize input (self.left/self.right/self.attack)
         self.fsm.add_transition(self.TIME_UP, self.LEFT, self.choose_move, None)
         self.fsm.add_transition(self.TIME_UP, self.RIGHT, self.choose_move, None)
         self.fsm.add_transition(self.TIME_UP, self.ATTACK, self.choose_move, None)
-        
+            
+    # Update FSM based on input event (e.g., TIME_UP)
     def update_fsm(self, input_symbol):
-        # Update FSM based on input event (e.g., TIME_UP or HEALTH_ZERO)
         #print(input_symbol, self.get_state())
         self.fsm.process(input_symbol)
-        
+    
+    #returns current FSM state of opponent
     def get_state(self):
-        # TODO: Return the maze bot's current state
         return self.fsm.current_state
+    
+    #selects a state/move randomly for opponent
     def choose_move(self):
         rand = random.random()
         if rand < 0.3:
@@ -52,7 +59,7 @@ class Opponent(pygame.sprite.Sprite):
         self.change_graphics("assets/images/opp_standing.png")
         
 
-
+    #chooses random attack each time
     def perform_attack(self):
         self.x -= 0
         rand = random.random()
@@ -60,50 +67,23 @@ class Opponent(pygame.sprite.Sprite):
             self.change_graphics("assets/images/opp_punching.png")  
         else:
             self.change_graphics("assets/images/opp_kicking.png")  
+    #changes graphics
     def change_graphics(self, image_path):
         new_image = pygame.image.load(image_path)
         new_image = pygame.transform.scale(new_image, (self.fighter_height, self.fighter_width))
         self.fighter_image = new_image
-    def check_collision(self, player_x, player_y, player_width, player_height):
-    # Check for collision with the player
-        if (
-            self.x < player_x + player_width and
-            self.x + self.fighter_width > player_x and
-            self.y < player_y + player_height and
-            self.y + self.fighter_height > player_y
-        ):
-            return True
-        return False
-            
+    #moves opponent left     
     def move_left(self):
-        #self.change_graphics("assets/images/opp_standing.png")
         distance = random.randint(5, 15)
         self.x -= distance
         if self.x < 0:
             self.x = 0
-
+    #moves opponent right
     def move_right(self):
-        #self.change_graphics("assets/images/opp_standing.png")
         distance = random.randint(5, 15)
         self.x += distance
         if self.x > self.width - self.fighter_width:
-            self.x = self.width - self.fighter_width
-
-    def perform_dead(self):
-        print("dead")
-        #pygame.quit()
-        #sys.exit()      
-    def is_contacting_player(self, player_x, player_y, player_width, player_height):
-        # Check for collision with the player
-        if (
-            self.x < player_x + player_width and
-            self.x + self.fighter_width > player_x and
-            self.y < player_y + player_height and
-            self.y + self.fighter_height > player_y
-        ):
-            return True
-        return False
-  
-
+            self.x = self.width - self.fighter_width  
+    #draws screen
     def draw(self, screen):
         screen.blit(self.fighter_image, (self.x, self.y))    
