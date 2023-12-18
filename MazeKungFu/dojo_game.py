@@ -34,25 +34,23 @@ class DojoGame:
         self.run_time = 120
         self.elapsed_time = 0
 
-        self.health = 100
+        self.health = 40
         self.show_dojo = True  # Add this line to initialize the attribute
-        pygame.mixer.music.load("path_to_your_theme_music_file.mp3")
+        pygame.mixer.music.load("assets/bknd_music.mp3")
 
     def deduct_health(self, damage):
         self.health -= damage
         if self.health <= 0:
-            # Game over logic (you can customize this according to your game requirements)
-            print("You were killed. Game Over")
+            print("You were defeated by your opponent and failed the black belt test. Game Over")
             pygame.quit()
             sys.exit()
 
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                print("quitting")
+                print("Quitting")
                 pygame.quit()
                 sys.exit()
-
 
     def move_fighter(self, keys):
         if keys[pygame.K_l] and self.fighter_x > 0:
@@ -81,21 +79,25 @@ class DojoGame:
         if self.fighter_x <= 0 or self.fighter_x >= self.width - self.fighter_width:
             self.direction *= -1
     
-    def update_opponent(self):
+    def update_health(self):
         elapsed_time = time.time() - self.opponent_start_time
+        
         if elapsed_time > self.kf_opponent.timer_duration:
             self.kf_opponent.update_fsm(self.kf_opponent.TIME_UP)
 
-
             opponent_state = self.kf_opponent.get_state()
-
             if opponent_state == self.kf_opponent.LEFT:
                 self.kf_opponent.move_left()
             elif opponent_state == self.kf_opponent.RIGHT:
                 self.kf_opponent.move_right()
             elif opponent_state == self.kf_opponent.ATTACK:
+                # Check for proximity to the opponent and deduct health
+                if (
+                    self.fighter_x < self.kf_opponent.x + self.kf_opponent.fighter_width
+                    and self.fighter_x + self.fighter_width > self.kf_opponent.x
+                ):
+                    self.deduct_health(10)
                 self.kf_opponent.perform_attack()
-
 
             self.opponent_start_time = time.time()
 
@@ -109,41 +111,8 @@ class DojoGame:
         health_text = font.render(f"Health: {self.health}", True, (255, 0, 0))
         self.screen.blit(health_text, (10, 10))
 
-    def update_opponent_state(self):
-        elapsed_time = time.time() - self.opponent_start_time
-        if elapsed_time > self.kf_opponent.timer_duration:
-            self.kf_opponent.update_fsm(self.kf_opponent.TIME_UP)
-
-            opponent_state = self.kf_opponent.get_state()
-            print(f"Opponent state after TIME_UP transition: {opponent_state}")
-
-            # Print opponent's state again to see if it changed during actions
-            print(f"Opponent state after actions: {self.kf_opponent.get_state()}")
-
-            # Move the opponent based on the final state
-            if opponent_state == self.kf_opponent.LEFT:
-                self.kf_opponent.move_left()
-            elif opponent_state == self.kf_opponent.RIGHT:
-                self.kf_opponent.move_right()
-            elif opponent_state == self.kf_opponent.ATTACK:
-                self.kf_opponent.perform_attack()
-
-            self.opponent_start_time = time.time()
-
-
-
-    def update_opponent_movement(self):
-        opponent_state = self.kf_opponent.get_state()
-        if opponent_state == self.kf_opponent.LEFT:
-            self.kf_opponent.move_left()
-        elif opponent_state == self.kf_opponent.RIGHT:
-            self.kf_opponent.move_right()
-        elif opponent_state == self.kf_opponent.ATTACK:
-            self.kf_opponent.perform_attack()
-
-
     def run(self):
-        print("Hello, and welcome to your black belt test. Today, we will test both your physical and mental abilities through 2 tests. You will need to survive both to win. Good luck fighter!")
+        print("Hello, and welcome to your black belt test. Today, we will test both your physical and mental abilities through 2 tests. You will need to survive both to win. Good luck, fighter!")
         running = True
         start_time = time.time()
         pygame.mixer.music.play(-1)
@@ -168,6 +137,7 @@ class DojoGame:
             # Update opponent's state
             elapsed_time = time.time() - self.opponent_start_time
             if elapsed_time > self.kf_opponent.timer_duration:
+                self.update_health()
                 self.kf_opponent.update_fsm(self.kf_opponent.TIME_UP)
 
                 opponent_state = self.kf_opponent.get_state()
@@ -194,11 +164,7 @@ class DojoGame:
             elif opponent_state == self.kf_opponent.ATTACK:
                 self.kf_opponent.perform_attack()
 
-            # Check for collision with the player
-            # if self.kf_opponent.is_contacting_player(self.fighter_x, self.fighter_y, self.fighter_width, self.fighter_height):
-            # self.kf_opponent.handle_collision(self)
-
-            # Update display
+            
             self.update_display()
 
             pygame.display.flip()
@@ -223,8 +189,6 @@ class DojoGame:
         pygame.quit()
         sys.exit()
 
-
 if __name__ == "__main__":
     game = DojoGame()
     game.run()
-
